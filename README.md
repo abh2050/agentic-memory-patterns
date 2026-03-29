@@ -6,6 +6,25 @@ A production-realistic multi-agent system in Python demonstrating a **six-patter
 
 The system uses a `StateGraph` where agents communicate via shared state and Redis streams. Memory is persisted in `memory.json` using atomic write patterns.
 
+```mermaid
+graph TD
+    User((User)) -->|UserMessage| Conv[Conversation Node]
+    Conv -->|Response| User
+    Conv -->|XADD| RedisQueue[Redis Stream: extraction:queue]
+    
+    subgraph Async Background Process
+        RedisQueue -->|XREAD| Ext[Extraction Node]
+        Ext -->|Debounce Timer| Ext
+        Ext -->|FactCandidates| Mem[Memory Node]
+        Mem -->|Atomic Write| Store[(memory.json)]
+        Mem -->|XADD| RedisUpdates[Redis Stream: memory:updates]
+    end
+    
+    Store -->|Read| PB[Prompt Builder Node]
+    PB -->|System Prompt| AgentState[AgentState]
+    AgentState -->|Inject| Conv
+```
+
 ### The Six Memory Patterns
 
 1.  **Conversation Entry**: Immediate response generation while triggering async background processing.
