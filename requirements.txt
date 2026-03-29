@@ -1,0 +1,7 @@
+langgraph
+langchain-openai
+pydantic>=2.0.0
+redis
+python-dotenv
+tenacity
+tiktoken
